@@ -116,6 +116,9 @@ export default function PostsPage() {
                         </>
                     )}
 
+                    <button onClick={() => router.push(`/posts/${post.id}`)}>
+                        View Comments
+                    </button>
                 </div>
             ))}
         </div>
