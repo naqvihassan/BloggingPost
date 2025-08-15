@@ -1,44 +1,62 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [users, setUsers] = useState([]);
-    const [currentUser, setCurrentUser] = useState(null);
-    const router = useRouter();
+  const [users, setUsers] = useState([]);  
+  const [currentUser, setCurrentUser] = useState(null);
 
-    const signUp = (name, email, password) => {
-        if (users.find(u => u.email === email)) {
-            alert("User already exists!");
-            return;
-        }
-        const newUser = { name, email, password };
-        setUsers([...users, newUser]);
-        setCurrentUser(newUser);
-        router.push("/posts");
-    };
+  useEffect(() => {
+    const savedUsers = localStorage.getItem("users");
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
+    }
+  }, []);
 
-    const logIn = (email, password) => {
-        const user = users.find(u => u.email === email && u.password === password);
-        if (!user) {
-            alert("Invalid email or password");
-            return;
-        }
-        setCurrentUser(user);
-        router.push("/posts");
-    };
+  useEffect(() => {
+    localStorage.setItem("users", JSON.stringify(users));
+  }, [users]);
 
-    const logOut = () => {
-        setCurrentUser(null);
-        router.push("/auth");
-    };
+  const signUp = (name, email, password) => {
+    if (users.find(u => u.email === email)) {
+      alert("User already exists!");
+      return;
+    }
+    const newUser = { name, email, password };
+    setUsers([...users, newUser]);
+    setCurrentUser(newUser);
+  };
 
-    return (
-        <AuthContext.Provider value={{ currentUser, users, signUp, logIn, logOut }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  const logIn = (email, password) => {
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      alert("Invalid email or password");
+      return;
+    }
+    setCurrentUser(user);
+  };
+
+  const logOut = () => {
+    setCurrentUser(null);
+  };
+
+  const isAuthenticated = () => {
+    return currentUser !== null;
+  };
+
+  return (
+    <AuthContext.Provider value={{ 
+      currentUser, 
+      users, 
+      signUp, 
+      logIn, 
+      logOut, 
+      isAuthenticated
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);

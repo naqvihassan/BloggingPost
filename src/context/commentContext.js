@@ -12,13 +12,24 @@ export function CommentsProvider({ children }) {
             setComments(JSON.parse(local));
             setLoading(false);
         } else {
-            async function fetchComments() {
-                const res = await fetch("https://jsonplaceholder.typicode.com/comments");
-                const data = await res.json();
-                setComments(data);
-                setLoading(false);
+            async function fetchCommentsForPosts() {
+                try {
+                    const postsRes = await fetch("https://jsonplaceholder.typicode.com/posts");
+                    const postsData = await postsRes.json();
+
+                    const commentsPromises = postsData.map(post =>
+                        fetch(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`).then(res => res.json())
+                    );
+                    const commentsArrays = await Promise.all(commentsPromises);
+                    const allComments = commentsArrays.flat();
+                    setComments(allComments);
+                } catch (err) {
+                    setComments([]);
+                } finally {
+                    setLoading(false);
+                }
             }
-            fetchComments();
+            fetchCommentsForPosts();
         }
     }, []);
 
